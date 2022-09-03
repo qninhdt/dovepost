@@ -26,7 +26,7 @@ class PermissionConfig {
 // <don't care>---------------------------------------------------------------------
 
 export const Permission: { [key in keyof PermissionConfig]?: number } = {};
-export const PermissionPriority: { [key in keyof PermissionConfig]?: number } = {};
+export const PermissionLevel: { [key in keyof PermissionConfig]?: number } = {};
 
 import * as fs from 'fs';
 import { join } from 'path';
@@ -43,16 +43,22 @@ function syncJsonFile() {
         if (!isNaN(name as any)) return;
         if (name in permissions) {
             Permission[name] = permissions[name]._id;
-            PermissionPriority[name] = permissions[name].priority;
+            PermissionLevel[name] = permissions[name].level;
             temp[name] = permissions[name];
         } else {
             count++;
             Permission[name] = count;
-            PermissionPriority[name] = permissionConfig[name];
-            temp[name] = { _id: count, priority: permissionConfig[name] };
+            PermissionLevel[name] = permissionConfig[name];
+            temp[name] = { _id: count, level: permissionConfig[name] };
         }
     });
 
     fs.writeFileSync(jsonPath, JSON.stringify({ permissions: temp, count }, null, 4));
 }
 syncJsonFile();
+
+// --------------------------------------------------------------------------------
+
+export const LowLevelPermissions: number[] = Object.keys(PermissionLevel)
+    .filter((name) => PermissionLevel[name] <= 1)
+    .map((name) => Permission[name]);

@@ -12,19 +12,27 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     async canActivate(context: ExecutionContext) {
+        const isPublic = this.reflector.getAllAndOverride<boolean>('is-public', [
+            context.getHandler(),
+            context.getClass(),
+        ]);
+
+        if (isPublic) {
+            return true;
+        }
+
         const requiredPermissions = this.reflector.getAllAndOverride<number[]>('permissions', [
             context.getHandler(),
             context.getClass(),
         ]);
 
-        // no required permissions -> public
-        if (!requiredPermissions) {
-            return true;
-        }
-
         const { req } = GqlExecutionContext.create(context).getContext();
         await super.canActivate(new ExecutionContextHost([req]));
         const { user } = req;
+
+        if (!requiredPermissions) {
+            return true;
+        }
 
         return hasPermission(user, requiredPermissions);
     }

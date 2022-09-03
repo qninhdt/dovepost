@@ -1,4 +1,4 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import * as mongoose from 'mongoose';
@@ -8,7 +8,7 @@ import { Role } from '@/role/role.schema';
 @ObjectType()
 export class User {
     // id
-    @Field(() => String)
+    @Field(() => ID)
     _id: string;
     // username
     @Prop({ unique: true, sparse: true })
@@ -21,7 +21,7 @@ export class User {
     // lastName
     @Prop()
     @Field(() => String, { nullable: true })
-    lasttName: string;
+    lastName: string;
     // email
     @Prop({ unique: true, required: true })
     @Field(() => String)
@@ -31,8 +31,12 @@ export class User {
     password: string;
     // roles
     @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Role' }] })
-    @Field(() => [String])
+    @Field(() => [Role])
     roles: Role[];
+    // permissions
+    @Prop({ type: [Number] })
+    @Field(() => [Number])
+    permissions: number[];
     // disabledRoles
     @Prop({
         type: {
@@ -50,7 +54,7 @@ export class User {
 
 @ObjectType()
 export class DisabledRole {
-    @Field(() => String)
+    @Field(() => ID)
     _id: string;
     @Field(() => Date, { nullable: true })
     expiryDate: Date;
@@ -58,8 +62,8 @@ export class DisabledRole {
 
 @ObjectType()
 export class DisabledPermission {
-    @Field(() => String)
-    _id: string;
+    @Field(() => Number)
+    _id: number;
     @Field(() => Date, { nullable: true })
     expiryDate: Date;
 }

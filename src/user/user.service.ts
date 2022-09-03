@@ -1,13 +1,10 @@
-import {
-    Injectable,
-    ConflictException,
-    UnauthorizedException,
-    NotFoundException,
-} from '@nestjs/common';
+import { LowLevelPermissions } from '@/role/permission/permission.constants';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
+import { AddUserRoleInput } from './dto/add-user-role.input';
 import { CreateUserDto } from './dto/create-user.dto';
-import { PublicUserDto } from './dto/public-user.dto';
+import { RemoveUserRoleInput } from './dto/remove-user-role.input';
 import { ValidateUserDto } from './dto/validate-user.dto';
 import { User } from './user.schema';
 
@@ -33,11 +30,40 @@ export class UserService {
         }
     }
 
-    async addRoleToUser(userId: string, roleId: string) {
-        return await this.userModel.updateOne({ _id: userId }, { $addToSet: { roles: roleId } });
+    private async reloadPermissions(userId: string) {
+        const users = await this.userModel.aggregate([
+            { $match: { _id: new mongoose.Types.ObjectId(userId) } },
+            {
+                $lookup: {
+                    localField: 'roles',
+                    foreignField: '_id',
+                    from: 'roles',
+                    as: 'roles',
+                },
+            },
+        ]);
+
+        const user: User = users[0];
+        const permissionSet = new Set(LowLevelPermissions);
+
+        user.roles.forEach((role) => {
+            role.permissions.forEach((_id) => permissionSet.add(_id));
+        });
+
+        await this.userModel.updateOne({ _id: userId }, { permissions: [...permissionSet] });
     }
 
-    async validate(validateUserDto: ValidateUserDto): Promise<PublicUserDto> {
+    async addUserRole(data: AddUserRoleInput) {
+        await this.userModel.updateOne({ _id: data.userId }, { $addToSet: { roles: data.roleId } });
+        await this.reloadPermissions(data.userId);
+    }
+
+    async removeUserRole(data: RemoveUserRoleInput) {
+        await this.userModel.updateOne({ _id: data.userId }, { $pull: { roles: data.roleId } });
+        await this.reloadPermissions(data.userId);
+    }
+
+    async validate(validateUserDto: ValidateUserDto): Promise<Partial<User>> {
         const user = await this.findOne({
             email: validateUserDto.email,
             username: validateUserDto.username,
@@ -52,11 +78,13 @@ export class UserService {
             _id: user._id,
             username: user.username,
             firstName: user.firstName,
-            lastName: user.lasttName,
+            lastName: user.lastName,
+            roles: user.roles,
+            permissions: user.permissions,
         };
     }
 
-    async create(createUserDto: CreateUserDto): Promise<PublicUserDto> {
+    async create(createUserDto: CreateUserDto): Promise<Partial<User>> {
         const userWithSameEmail = await this.userModel.findOne({
             email: createUserDto.email,
         });
@@ -65,10 +93,14 @@ export class UserService {
             throw new ConflictException('Email was used');
         }
 
-        const user = await this.userModel.create(createUserDto);
+        const user: User = await this.userModel.create({
+            ...createUserDto,
+            permissions: LowLevelPermissions,
+        });
 
         return {
             _id: user._id,
+            permissions: user.permissions,
         };
     }
 }

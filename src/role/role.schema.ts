@@ -1,4 +1,4 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 
@@ -6,7 +6,7 @@ import mongoose, { Document } from 'mongoose';
 @ObjectType()
 export class Role {
     // _id
-    @Field(() => String)
+    @Field(() => ID)
     _id: string;
     // name
     @Prop({ unique: true })
