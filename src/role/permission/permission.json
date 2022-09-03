@@ -1,0 +1,49 @@
+{
+    "permissions": {
+        "ARTICAL_CREATE": {
+            "_id": 1,
+            "priority": 1
+        },
+        "ARTICAL_DELETE_OTHER": {
+            "_id": 13,
+            "priority": 3
+        },
+        "ARTICAL_CREATE_COMMENT": {
+            "_id": 3,
+            "priority": 1
+        },
+        "ARTICAL_CLAP": {
+            "_id": 4,
+            "priority": 0
+        },
+        "ARTICAL_REACT": {
+            "_id": 5,
+            "priority": 1
+        },
+        "PERMISSION_DISABLE": {
+            "_id": 6,
+            "priority": 3
+        },
+        "USER_VIEW_OTHER_EMAIL": {
+            "_id": 12,
+            "priority": 2
+        },
+        "USER_CHANGE_USERNAME": {
+            "_id": 8,
+            "priority": 1
+        },
+        "USER_ROLE_ADD": {
+            "_id": 9,
+            "priority": 3
+        },
+        "USER_ROLE_DISABLE": {
+            "_id": 10,
+            "priority": 3
+        },
+        "USER_ROLE_REMOVE": {
+            "_id": 11,
+            "priority": 3
+        }
+    },
+    "count": 13
+}
